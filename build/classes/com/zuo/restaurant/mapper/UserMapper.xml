@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zuo.restaurant.mapper.UserMapper">
+	<sql id="query_user_where">
+		<if test="userCustom!=null">
+			<if test="userCustom.nickname!=null and userCustom.nickname!=''">
+				and u.nickname like '%${userCustom.nickname}%'
+			</if>
+			<if test="userCustom.type!=null">
+				and u.type=#{userCustom.type}
+			</if>
+		</if>
+	</sql>
+	<sql id="query_general">
+		<if test="userCustom!=null">
+			<if test="userCustom.name!=null and userCustom.name!=''">
+				and u.name=#{userCustom.name}
+			</if>
+			<if test="userCustom.password!=null and userCustom.password!=''">
+				and u.password=#{userCustom.password}
+			</if>
+		</if>
+	</sql>
+	
+	<select id="findUserById" parameterType="int" resultType="user" >
+		select id,name,type,password,nickname from t_user where id=#{id}
+	</select>
+	
+	<select id="findUserList" parameterType="com.zuo.restaurant.vo.UserQueryVo" 
+		resultType="com.zuo.restaurant.po.UserCustom">
+		select id,name,type,password,nickname from t_user u
+		<where>
+			<include refid="query_user_where"></include>
+		</where>
+		limit <!-- ${userCustom.pageOffset}*${userCustom.pageSize}-1,#{userCustom.pageSize} -->
+			 #{userCustom.currentPage},#{userCustom.pageSize} 
+	</select>
+	<select id="queryUserGeneral" parameterType="com.zuo.restaurant.vo.UserQueryVo"
+			resultType="com.zuo.restaurant.po.UserCustom">
+		select * from t_user u
+		<where>
+			<include refid="query_general"></include>
+		</where>
+	</select>
+	
+	<select id="findUserCount" parameterType="com.zuo.restaurant.vo.UserQueryVo" resultType="int">
+		select count(*) from t_user u
+		<where>
+			<include refid="query_user_where"></include>
+		</where>
+	</select>
+	
+	<select id="findUserByUsername" parameterType="String" resultType="user">
+		select * from t_user where name=#{name}
+	</select>
+	<select id="findUserByType" parameterType="com.zuo.restaurant.vo.UserQueryVo"
+			resultType="com.zuo.restaurant.po.UserCustom">
+		select * from t_user where type=#{type}
+	</select>
+	<select id="findUserLogin" parameterType="com.zuo.restaurant.vo.UserQueryVo"
+			resultType="com.zuo.restaurant.po.UserCustom">
+		select * from t_user where name=#{userCustom.name} and password=#{userCustom.password}
+	</select>
+	
+	<insert id="insertUser" parameterType="user" >
+		<selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+			select LAST_INSERT_ID()
+		</selectKey> 
+		insert into t_user(name,password,type,nickname)
+		value(#{name},#{password},#{type},#{nickname})
+	</insert>
+	
+	<delete id="deleteUserById" parameterType="int">
+		delete  from t_user where id=#{id}
+	</delete>
+	
+	<update id="updateUser" parameterType="user">
+		update t_user set name=#{name},type=#{type},password=#{password},nickname=#{nickname} where id=#{id}
+	</update>
+	
+	
+	
+</mapper>
+
+
+
+

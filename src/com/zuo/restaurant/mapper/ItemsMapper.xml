@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zuo.restaurant.mapper.ItemsMapper">
+	<sql id="forEach_Ids">
+		<if test="itemsIds!=null">
+			<foreach collection="itemsIds" item="item_id" open="and id in(" close=")" separator=","> 
+				#{item_id}
+			</foreach>
+		</if>
+	</sql>
+	<sql id="query_Items">
+		<if test="itemsCustom!=null">
+			<if test="itemsCustom.name!=null and itemsCustom.name!=''">
+				and i.name like '%${itemsCustom.name}%'
+			</if>
+			<if test="itemsCustom.price!=null">
+				<![CDATA[ and i.price<=#{itemsCustom.price} order by price asc]]>
+			</if>
+		</if>
+	</sql>
+	
+	<select id="selectItemById" parameterType="int" resultType="com.zuo.restaurant.po.ItemsCustom">
+		select * from t_items where id=#{itemId}
+	</select>
+	
+	<select id="findAllItems" parameterType="com.zuo.restaurant.vo.ItemsQueryVo"
+			resultType="com.zuo.restaurant.po.ItemsCustom">
+		select * from t_items i
+		<where>
+			<include refid="query_Items"></include>		
+		</where>
+		<if test="itemsCustom.currentPage!=null and itemsCustom.pageSize!=null">
+			limit  #{itemsCustom.currentPage},#{itemsCustom.pageSize} 
+		</if>
+	</select>
+	
+	<select id="findItemsCount" parameterType="com.zuo.restaurant.vo.ItemsQueryVo" resultType="int">
+		select count(*) from t_items i
+		<where>
+			<include refid="query_Items"></include>
+		</where>
+	</select>
+	
+	<insert id="insertItem" parameterType="items" >
+		insert into t_items(name,price,detail,pic,createTime)
+		values(#{name},#{price},#{detail},#{pic},now())
+	</insert>
+	
+	<delete id="deleteItem" parameterType="int">
+		delete from t_items where id=#{id}
+	</delete>
+	
+	<delete id="deleteItems" parameterType="com.zuo.restaurant.vo.ItemsQueryVo">
+		delete from t_items
+		<where>
+			<include refid="forEach_Ids"></include>
+		</where>
+	</delete>
+	
+	<update id="updateItem" parameterType="items">
+		update t_items set name=#{name},price=#{price},detail=#{detail},pic=#{pic} where id=#{id}
+	</update>
+	
+	
+</mapper>
+
+
+
+

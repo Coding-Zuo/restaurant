@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zuo.restaurant.mapper.OrdersItemsMapper">
+
+
+	
+
+	<insert id="insertOrdersItems" parameterType="ordersItems">
+		insert into t_orders_items(orders_id,items_id,items_num,items_type)
+		values(#{orderId},#{itemId},#{itemNum},#{itemType})
+	</insert>
+
+	<delete id="deleteOrdersItemsByOrderId" parameterType="int">
+		delete from t_orders_items where orders_id=#{orderId}
+	</delete>	
+	<delete id="deleteOrdersItemsByItemId" parameterType="int">
+		delete from t_orders_items where items_id=#{itemId}
+	</delete>	
+	
+	
+	
+</mapper>
+
+
+
+

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zuo.restaurant.mapper.OrdersMapper">
+	<sql id="forEach_Ids">
+		<if test="orderIds!=null">
+			<foreach collection="orderIds" item="order_id" open="and id in(" close=")" separator=","> 
+				#{order_id}
+			</foreach>
+		</if>
+	</sql>
+	
+	<sql id="query_orders">
+		<if test="ordersCustom!=null">
+			<if test="ordersCustom.endTime !=null "  >
+        		 <![CDATA[ and o.endTime <=  #{ordersCustom.endTime} order by o.endTime desc]]>
+   			 </if>
+			<if test="ordersCustom.createTime!=null">
+				<![CDATA[ and o.createTime  >=  #{ordersCustom.createTime} order by o.createTime desc ]]>
+			</if>
+		</if>
+	</sql>
+	
+	<select id="findAllOrder" parameterType="com.zuo.restaurant.vo.OrdersQueryVo"
+			resultType="com.zuo.restaurant.po.Orders">
+		select * from t_orders o
+		<where>
+			<include refid="query_orders"></include>
+		</where>
+	</select>
+	
+	<select id="findOrderByUserId" parameterType="com.zuo.restaurant.vo.OrdersQueryVo"
+	 	resultMap="OrderByUserIdMap">
+		select o.user_id,o.number,o.note,o.createtime,o.address,u.id,u.name 
+		from 
+			t_user u,
+			t_orders o 
+		where 
+			u.id=o.user_id 
+		and 
+			u.id=#{userCustom.id}
+	</select>
+	<resultMap type="com.zuo.restaurant.po.OrdersCustom" id="OrderByUserIdMap">
+		<id  column="id" property="id" />
+		<result column="user_id" property="userId"/>		
+		<result column="number" property="number"/>		
+		<result column="note" property="note"/>		
+		<result column="createtime" property="createTime"/>		
+		<result column="address" property="address"/>	
+		<association property="user" javaType="com.zuo.restaurant.po.User">
+			<id column="id" property="id"/>
+			<result column="name" property="name"/>
+		</association>	
+	</resultMap>
+	
+	<select id="findOrdersCount" parameterType="com.zuo.restaurant.vo.OrdersQueryVo" resultType="int">
+		select count(*) from t_orders o
+		<where>
+			<include refid="query_orders"></include>
+		</where>
+	</select>
+	
+	<insert id="insertOrder" parameterType="orders" keyProperty="id" useGeneratedKeys="true" >
+		<selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+			select LAST_INSERT_ID() as id
+		</selectKey> 
+		insert into t_orders(user_id,number,note,createtime,address) 
+		values(#{userId},concat('10000'),#{note},#{createTime},#{address})
+	</insert>
+	<update id="updateNumber" parameterType="int">
+		update t_orders o 
+		set 
+			o.number=concat('10000',#{id}) 
+		where o.id=#{id}
+	</update>
+	
+	<update id="updateOrderNote" parameterType="orders">
+	 	update 
+	 		t_orders o,t_orders_items oi 
+	 	set 
+	 		o.note=#{note} 
+		where 
+			o.user_id=#{userId} and o.id=#{id}
+	</update>
+	
+	<delete id="deleteOrder" parameterType="int">
+		delete from t_orders where id=#{id}
+	</delete>
+	<delete id="deleteOrders" parameterType="com.zuo.restaurant.vo.OrdersQueryVo">
+		delete from t_orders
+		<where>
+			<include refid="forEach_Ids"></include>
+		</where>
+	</delete>
+	
+	<select id="selectOrdersItemsList"  parameterType="com.zuo.restaurant.po.UserCustom"
+		resultMap="ordersItemsList">
+		select
+			 o.id order_id,
+			 o.user_id,
+			 o.number, 
+			 o.createtime, 
+			 o.endTime,
+			 o.address, 
+			 o.note , 
+			 i.id item_id,
+			 i.name,
+			 i.price,
+			 i.pic,
+			 oi.id oi_id,
+			 oi.items_num,
+			 oi.items_type
+		from 
+			t_orders o,t_items i,t_orders_items oi
+		where 
+			o.id=oi.orders_id and i.id=oi.items_id and 
+			o.user_id=#{id}
+		order by 
+			o.createtime desc 
+	</select>
+	
+	<resultMap type="orders" id="ordersItemsList">
+		<id column="order_id" property="id"/>
+		<result column="user_id" property="userId"/>
+		<result column="number" property="number"/>
+		<result column="createtime" property="createTime"/>
+		<result column="endTime" property="endTime"/>
+		<result column="address" property="address"/>
+		<result column="note" property="note"/>
+		<collection property="ordersItems" ofType="com.zuo.restaurant.po.OrdersItems">
+			<id column="id" property="oi_id"/>
+			<result column="items_num" property="itemNum"/>
+			<result column="items_type" property="itemType"/>
+			<association property="items" javaType="items">
+				<id column="item_id" property="id"/>
+				<result column="name" property="name"/>
+				<result column="price" property="price"/>
+				<result column="pic" property="pic"/>
+			</association>
+		</collection>
+	</resultMap>
+	
+	<select id="selectAllUserOrdersByNowTime"  parameterType="com.zuo.restaurant.po.UserCustom"
+		resultMap="ordersItemsList">
+		select
+			 o.id order_id,
+			 o.user_id,
+			 o.number, 
+			 o.createtime, 
+			 o.endTime,
+			 o.address, 
+			 o.note , 
+			 i.id item_id,
+			 i.name,
+			 i.price,
+			 i.pic,
+			 oi.id oi_id,
+			 oi.items_num,
+			 oi.items_type
+		from 
+			t_orders o,t_items i,t_orders_items oi
+		where 
+			o.id=oi.orders_id and i.id=oi.items_id 
+		<![CDATA[ and o.createtime  >=  #{nowTime} order by o.createtime desc ]]>
+	</select>
+	
+	<select id="selectOrdersItemsCount"  parameterType="com.zuo.restaurant.po.UserCustom"
+		resultType="int">
+		select 
+			count(*) 
+		from 
+			t_orders o,t_items i,t_orders_items oi
+		where 
+			o.id=oi.orders_id and i.id=oi.items_id and 
+			o.user_id=#{id}
+	</select>
+	
+	<select id="selectAllUserOrdersByNowTimeCount"  parameterType="com.zuo.restaurant.po.UserCustom"
+		resultType="int">
+		select 
+			count(*) 
+		from 
+			t_orders o,t_items i,t_orders_items oi
+		where 
+			o.id=oi.orders_id and i.id=oi.items_id 
+			<![CDATA[ and o.createtime  >=  #{nowTime} ]]>
+	</select>
+	
+	<select id="selectOrderIdByUserId" parameterType="int" resultType="int">
+		select id from t_orders where user_id=#{userId}
+	</select>
+	
+	<update id="updateOrderEndTimeById" parameterType="int">
+		update t_orders set endTime=now() where id=#{id}
+	</update>
+	<select id="selectOrderByNum" parameterType="String" resultType="orders">
+		select * from t_orders where number=#{value}
+	</select>
+	
+	
+	
+	
+	
+</mapper>
+
+
+
+

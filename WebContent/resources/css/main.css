@@ -1,0 +1,10 @@
+.ct{
+	border-right:1px solid;
+	border-bottom:1px solid;
+}
+table.ct td{
+	border:1px solid #000;
+	border-bottom:none;
+	border-right:none;
+	padding:5px;
+}
